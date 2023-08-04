@@ -1,0 +1,664 @@
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 1   
+
+
+C51 COMPILER V9.01, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include<reg52.h>
+   2          #include<string.h>
+   3          
+   4          unsigned char bcd_dec(unsigned char bcd);    // Chuyen doi so BCD-thap phan
+   5          
+   6          unsigned char dec_bcd(unsigned char dec);    // Chuyen doi so thap phan-BCD
+   7          char h11=10,h12=10,m11=10, m12=10, h21, h22, m21, m22, s21, s22, dd1,dd2, mm1,mm2, yy1, yy2, thu1, chuong1
+             - = 'a', chuong2='a';
+   8          int i;
+   9          void Uart_Init();
+  10          void Uart_Write(char c);
+  11          char Uart_Read();
+  12          void note(int a);
+  13          unsigned int mode=0;
+  14          unsigned char gop2byte(char m, char n);
+  15          unsigned char bcd_dec(unsigned char bcd)
+  16                        {
+  17   1                return((bcd/16)*10+(bcd%16));
+  18   1          }   
+  19          
+  20          unsigned char dec_bcd(unsigned char dec) 
+  21                         {
+  22   1                 return((dec/10)*16+(dec%10));
+  23   1          }  
+  24          unsigned char gop2byte(char m, char n) {
+  25   1        m=m-48;
+  26   1        m=m<<4;
+  27   1        n=n-48;
+  28   1        return (m | n);
+  29   1      }       
+  30          void Uart_Init()
+  31          {
+  32   1        // Khoi tao UART o mode 1, 9600 baud
+  33   1        SM0 = 0; SM1 = 1;   // Chon UART mode 1
+  34   1        TMOD = 0x20;            // 0010 xxxx - Timer1 hoat dong o che do 8bit tu dong nap lai
+  35   1        TH1 = 0xFD;       // Toc do baud 9600
+  36   1        TR1 = 1;        // Timer1 bat dau chay
+  37   1        TI = 1;         // San sang gui du lieu
+  38   1        REN = 1;        // Cho phep nhan du lieu
+  39   1      }
+  40          
+  41          void Uart_Write(char c)
+  42          {
+  43   1        while(TI == 0);
+  44   1        TI = 0;
+  45   1        SBUF = c;
+  46   1      }
+  47          
+  48          
+  49          char Uart_Read()
+  50          {
+  51   1        while(RI == 0);
+  52   1        RI = 0;
+  53   1        return SBUF;
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 2   
+
+  54   1      }              
+  55          void batchuong();
+  56          
+  57          
+  58          //bit tang0=1,tang1=1,giam0=1,giam1=1,mode0=1,mode1=1;
+  59          char giay,phut,gio,h1,h2,m1,m2,s1,s2,ngay,thang,nam,ng1,ng2,th1,th2,n1,n2,thu,day; // cac gia tri
+  60          // giay,phut,gio,thu,ngay,thang,nam duoc tach thanh 2 so de hien thi
+  61          
+  62          // Dat lai ten cho cac chan dac biet duoc dung
+  63          sbit SCL=P1^0;    
+  64          sbit SDA=P1^1;
+  65          sbit Rs=P2^0;
+  66          sbit Rw=P2^1;
+  67          sbit En=P2^2;
+  68          sbit tang=P3^5;
+  69          sbit giam=P3^4;
+  70          sbit menu=P3^2;
+  71          sbit Bf=  P0^7;
+  72          sbit buzz=P3^6;
+  73          sbit nut1=P2^5;
+  74          sbit nut2=P2^6;
+  75          sbit nut3=P2^7;
+  76          
+  77          
+  78          
+  79          // Ham tre t(ms)
+  80          void delay(int t)
+  81          {
+  82   1        int a,b;
+  83   1        for(a=0;a<t;a++)
+  84   1        {
+  85   2          for(b=0;b<125;b++)
+  86   2        {}
+  87   2        }
+  88   1      }
+  89          void note(int nh) {
+  90   1      if (nut3==0) {h11=10; h12=10; m11=10; m12=10;}
+  91   1      if (nh==1)
+  92   1      {
+  93   2      i=65;
+  94   2        while (i>0) {
+  95   3      TMOD=0X01;
+  96   3      TH0=0Xf8;
+  97   3      TL0=0X80;
+  98   3      TR0=1;
+  99   3      while(TF0==0);
+ 100   3      buzz=~buzz;
+ 101   3      TR0=0;
+ 102   3      TF0=0;
+ 103   3      i--;
+ 104   3          }
+ 105   2        buzz=0;
+ 106   2      }
+ 107   1      
+ 108   1      if (nh==2)
+ 109   1      {
+ 110   2      i=73;
+ 111   2      while (i>0) {
+ 112   3      TMOD=0X01;
+ 113   3      TH0=0Xf9;
+ 114   3      TL0=0X55;
+ 115   3      TR0=1;
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 3   
+
+ 116   3      while(TF0==0);
+ 117   3      buzz=~buzz;
+ 118   3      TR0=0;
+ 119   3      TF0=0;
+ 120   3        i--;
+ 121   3        }
+ 122   2      buzz=0;
+ 123   2      }
+ 124   1      
+ 125   1      if (nh==3)
+ 126   1      {
+ 127   2      i=83;
+ 128   2      while (i>0) {
+ 129   3      TMOD=0X01;
+ 130   3      TH0=0Xfa;
+ 131   3      TL0=0X00;
+ 132   3      TR0=1;
+ 133   3      while(TF0==0);
+ 134   3        buzz=~buzz;
+ 135   3      TR0=0;
+ 136   3      TF0=0;
+ 137   3      i--;
+ 138   3        }
+ 139   2      buzz=0;
+ 140   2      }
+ 141   1      
+ 142   1      if (nh==4)
+ 143   1      {
+ 144   2      i=88;
+ 145   2      while (i>0) {
+ 146   3      TMOD=0X01;
+ 147   3      TH0=0Xfa;
+ 148   3      TL0=0X66;
+ 149   3      TR0=1;
+ 150   3      while(TF0==0);
+ 151   3        buzz=~buzz;
+ 152   3      TR0=0;
+ 153   3      TF0=0;
+ 154   3      i--;
+ 155   3        }
+ 156   2      buzz=0;
+ 157   2      }
+ 158   1      
+ 159   1      if (nh==5)
+ 160   1      {
+ 161   2      i=98;
+ 162   2      while (i>0) {
+ 163   3      TMOD=0X01;
+ 164   3      TH0=0XFB;
+ 165   3      TL0=0X00;
+ 166   3      TR0=1;
+ 167   3      while(TF0==0);
+ 168   3        buzz=~buzz;
+ 169   3      TR0=0;
+ 170   3      TF0=0;
+ 171   3      i--;
+ 172   3        }
+ 173   2      buzz=0;
+ 174   2      }
+ 175   1      
+ 176   1      if (nh==6)
+ 177   1      {
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 4   
+
+ 178   2      i=110;
+ 179   2      while (i>0) {
+ 180   3      TMOD=0X01;
+ 181   3      TH0=0XFB;
+ 182   3      TL0=0X80;
+ 183   3      TR0=1;
+ 184   3      while(TF0==0);
+ 185   3      buzz=~buzz;
+ 186   3      TR0=0;
+ 187   3      TF0=0;
+ 188   3      i--;
+ 189   3        }
+ 190   2      buzz=0;
+ 191   2      }
+ 192   1      if (nh==7)
+ 193   1      {
+ 194   2      i=124;
+ 195   2      while (i>0) {
+ 196   3      TMOD=0X01;
+ 197   3      TH0=0XFC;
+ 198   3      TL0=0X00;
+ 199   3      TR0=1;
+ 200   3      while(TF0==0);
+ 201   3        buzz=~buzz;
+ 202   3      TR0=0;
+ 203   3      TF0=0;
+ 204   3      i--;
+ 205   3        }
+ 206   2      buzz=0;
+ 207   2      }
+ 208   1      if (nh==8)
+ 209   1      {
+ 210   2      i=134;
+ 211   2      while (i>0) {
+ 212   3      TMOD=0X01;
+ 213   3      TH0=0XFC;
+ 214   3      TL0=0X40;
+ 215   3      TR0=1;
+ 216   3      while(TF0==0);
+ 217   3        buzz=~buzz;
+ 218   3      TR0=0;
+ 219   3      TF0=0;
+ 220   3      i--;
+ 221   3        }
+ 222   2      buzz=0;
+ 223   2      }
+ 224   1      }
+ 225          //Ham bat chuong
+ 226          void batchuong() {
+ 227   1        if (chuong1=='a') {
+ 228   2        note(1); note(7); note(8); note(6);note(2); note(1);note(5); note(6);note(6); note(1); note(7); note(5);n
+             -ote(2); 
+ 229   2          }
+ 230   1        if (chuong1=='b') {
+ 231   2        note(8); note(1); note(8);note(1); note(8);note(1); note(8);note(1); note(8); note(1); note(8);note(1); n
+             -ote(8);note(1); note(8);
+ 232   2          }
+ 233   1        if (chuong1=='c') {
+ 234   2        note(1); note(8);note(2);note(8); note(3); note(8);note(4);note(8);note(5); note(6);note(8);note(7); note
+             -(8); note(7); note(8);note(6); note(8);note(5);note(8);note(4); note(8);note(3);note(8);note(2); note(8);note(1);note(8)
+             -;
+ 235   2          }
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 5   
+
+ 236   1      }
+ 237          // Ham tre t(us)
+ 238          void delay_us(int t)
+ 239          {
+ 240   1        int a;
+ 241   1        for(a=0;a<t;a++)
+ 242   1        {}
+ 243   1      }
+ 244          
+ 245          // CAC CHUONG TRINH GIANH CHO LCD
+ 246          // Ham kiem tra ban
+ 247          void ban()
+ 248          {
+ 249   1        P0 =0xFF;
+ 250   1        Rs=0;
+ 251   1        Rw=1;
+ 252   1        while(Bf)
+ 253   1        {
+ 254   2          En=0;
+ 255   2        delay_us(50);
+ 256   2        En=1;
+ 257   2        }
+ 258   1      }
+ 259          // Ham ghi lenh
+ 260          void lenh(unsigned char x)
+ 261          {
+ 262   1        ban();
+ 263   1        P0=x;
+ 264   1        Rs=0;
+ 265   1        Rw=0;
+ 266   1        delay_us(50);
+ 267   1        En=1;
+ 268   1        delay_us(50);
+ 269   1        En=0;
+ 270   1      }
+ 271          // Ham ghi du lieu
+ 272          void kitu(unsigned char x)
+ 273          {
+ 274   1        ban();
+ 275   1        P0=x;
+ 276   1        Rs=1;
+ 277   1        Rw=0;
+ 278   1        delay_us(50);
+ 279   1        En=1;
+ 280   1        delay_us(50);
+ 281   1        En=0;
+ 282   1      }
+ 283          // Ham ghi chuoi
+ 284          void chuoi(unsigned char *s)
+ 285          {
+ 286   1        char i;
+ 287   1        for(i=0;i<strlen(s);i++)
+ 288   1        {
+ 289   2          kitu(s[i]);
+ 290   2        }
+ 291   1      }
+ 292          // Ham ghi cham 1 chuoi
+ 293          void chuoi_cham(unsigned char *s)
+ 294          {
+ 295   1        char i;
+ 296   1        for(i=0;i<strlen(s);i++)
+ 297   1        {
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 6   
+
+ 298   2          kitu(s[i]);
+ 299   2        delay(75);
+ 300   2        }
+ 301   1      }
+ 302          // Ham khoi tao LCD
+ 303          void khoitao()
+ 304          {
+ 305   1        lenh(0x38);
+ 306   1        lenh(0x01);
+ 307   1        lenh(0x0c);
+ 308   1        lenh(0x80);
+ 309   1      }
+ 310          
+ 311          // CAC CHUONG TRINH GIANH CHO DS1307
+ 312          // Ham start I2C
+ 313          void start()
+ 314          {
+ 315   1        SCL=1;
+ 316   1        SDA=1;
+ 317   1        delay(1);
+ 318   1        SDA=0;
+ 319   1        delay(1);
+ 320   1        SCL=0;
+ 321   1        SDA=1;
+ 322   1      }
+ 323          // Ham stop I2C
+ 324          void stop()
+ 325          {
+ 326   1        
+ 327   1        SDA=0;SCL=1;
+ 328   1        delay(1);
+ 329   1        SDA=1;
+ 330   1        delay(1);
+ 331   1      }
+ 332          // Ham ghi 1 byte vao DS1307
+ 333          void truyen(unsigned char g)
+ 334          {
+ 335   1        unsigned char tem,i;
+ 336   1        for(i=0;i<8;i++)
+ 337   1        {
+ 338   2          tem=g&0x80;
+ 339   2        if(tem==0x80)
+ 340   2        SDA=1;
+ 341   2        else SDA=0;
+ 342   2        SCL=1;
+ 343   2        delay(1);
+ 344   2        SCL=0;
+ 345   2        g=g*2;
+ 346   2        
+ 347   2        }
+ 348   1        SCL=1;
+ 349   1        delay(1);
+ 350   1        SCL=0;
+ 351   1      }
+ 352          // Ham nhan 1 byte
+ 353          unsigned char nhan()
+ 354          {
+ 355   1       unsigned char gt=0,i;
+ 356   1       for(i=0;i<8;i++)
+ 357   1       {
+ 358   2         SCL=1;
+ 359   2         gt=gt*2;
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 7   
+
+ 360   2         delay(1);
+ 361   2         gt=gt|SDA;
+ 362   2         SCL=0;
+ 363   2         delay(1);
+ 364   2       }
+ 365   1       SCL=1;
+ 366   1       SDA=1;
+ 367   1       delay(1);
+ 368   1       SCL=0;
+ 369   1       return gt;
+ 370   1      }
+ 371          //Ham ghi gia tri vao 1 dia chi 
+ 372          void ghi(unsigned char add,unsigned char gt)
+ 373          {
+ 374   1        start();
+ 375   1        truyen(0xd0);
+ 376   1        truyen(add);
+ 377   1        truyen(gt);
+ 378   1        stop();
+ 379   1      }
+ 380          // Ham doc gia tri tu 1 dia chi
+ 381          unsigned char doc(unsigned char add)
+ 382          {
+ 383   1        unsigned char value;
+ 384   1        start();
+ 385   1        truyen(0xd0);
+ 386   1        truyen(add);
+ 387   1        start();
+ 388   1        truyen(0xd1);
+ 389   1        value=nhan();
+ 390   1        stop();
+ 391   1        return value;
+ 392   1      }
+ 393          void docgio()
+ 394          {
+ 395   1        giay =bcd_dec(doc(0x00));
+ 396   1        phut =bcd_dec(doc(0x01));
+ 397   1        gio  =bcd_dec(doc(0x02));
+ 398   1        thu=bcd_dec(doc(0x03));
+ 399   1        ngay =bcd_dec(doc(0x04));
+ 400   1        thang=bcd_dec(doc(0x05));
+ 401   1        nam  =bcd_dec(doc(0x06)); 
+ 402   1      }
+ 403          //Tach gia tri de hien thi
+ 404          void tach()
+ 405          {  
+ 406   1        s1=giay/10+48;s2=giay%10+48;
+ 407   1        m1=phut/10+48;m2=phut%10+48;
+ 408   1        h1=gio/10+48;h2=gio%10+48;
+ 409   1        day=thu+47;
+ 410   1        ng1=ngay/10+48;ng2=ngay%10+48;
+ 411   1        th1=thang/10+48;th2=thang%10+48;
+ 412   1        n1=nam/10+48;n2=nam%10+48;
+ 413   1      }   
+ 414          
+ 415          
+ 416          //Ham hien thi thoi gian
+ 417          void hienthi()
+ 418          { 
+ 419   1        docgio();
+ 420   1        tach();
+ 421   1        lenh(0x80);
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 8   
+
+ 422   1        if(thu!=7)
+ 423   1        {
+ 424   2          chuoi("Thu ");
+ 425   2        kitu(day+1);
+ 426   2        kitu(' ');
+ 427   2        }
+ 428   1        else chuoi("CNHAT ");
+ 429   1        kitu(ng1);kitu(ng2);
+ 430   1        kitu('/');
+ 431   1        kitu(th1);kitu(th2);
+ 432   1        kitu('/');
+ 433   1        chuoi("20");
+ 434   1        kitu(n1);kitu(n2);
+ 435   1        lenh(0xc0);
+ 436   1        chuoi("Time: ");
+ 437   1        kitu(h1);kitu(h2);
+ 438   1        kitu(':');
+ 439   1        kitu(m1);kitu(m2);
+ 440   1        kitu(':');
+ 441   1        kitu(s1);kitu(s2);
+ 442   1        chuoi("  ");
+ 443   1      }
+ 444          
+ 445          
+ 446          // HAM CHINH
+ 447          void main()
+ 448          {
+ 449   1        buzz=0;
+ 450   1        khoitao();
+ 451   1        lenh(0x80);
+ 452   1        chuoi_cham(" REAL TIME CLOCK ");
+ 453   1        
+ 454   1        lenh(0xc0);
+ 455   1        chuoi_cham("    GROUP 10  ");
+ 456   1        delay(2000);
+ 457   1        lenh(0x01);
+ 458   1        while(1)
+ 459   1        {
+ 460   2          if (nut2==0) mode=2;
+ 461   2          if (nut1==0) mode=1;
+ 462   2        if (mode==0) //che do hien gio
+ 463   2        {hienthi();
+ 464   3        if ((h1==h11)&&(h2==h12)&&(m1==m11)&&(m2==m12))
+ 465   3         {
+ 466   4         batchuong();
+ 467   4         }
+ 468   3        }
+ 469   2        if (mode==1) // Che do dieu chinh gio
+ 470   2          {
+ 471   3          khoitao();
+ 472   3          chuoi("    SET GIO");
+ 473   3          delay(1000);
+ 474   3          lenh(0x01);
+ 475   3          chuoi("    HH:MM:SS");
+ 476   3          lenh(0xc0);
+ 477   3          chuoi("    ");
+ 478   3          Uart_Init();
+ 479   3          h21 = Uart_Read();
+ 480   3          Uart_Write(h21);
+ 481   3          kitu(h21);
+ 482   3          h22 = Uart_Read();
+ 483   3          Uart_Write(h22);
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 9   
+
+ 484   3          kitu(h22);
+ 485   3          gio = gop2byte(h21, h22);
+ 486   3          chuoi(":");
+ 487   3          m21 = Uart_Read();
+ 488   3          Uart_Write(m21);
+ 489   3          kitu(m21);
+ 490   3          m22 = Uart_Read();
+ 491   3          Uart_Write(m22);
+ 492   3          kitu(m22);
+ 493   3          phut = gop2byte(m21, m22);
+ 494   3          chuoi(":");
+ 495   3          s21 = Uart_Read();
+ 496   3          Uart_Write(s21);
+ 497   3          kitu(s21);
+ 498   3          s22 = Uart_Read();
+ 499   3          Uart_Write(s22);
+ 500   3          kitu(s22);
+ 501   3          giay = gop2byte(s21, s22);
+ 502   3          delay(10);
+ 503   3          lenh(0x01);
+ 504   3          chuoi("    SET NGAY");
+ 505   3          delay(2000);
+ 506   3          lenh(0x01);
+ 507   3          chuoi("  DATE:DD/MM/YY");
+ 508   3          lenh(0xc0);
+ 509   3          chuoi("     ");
+ 510   3          Uart_Init();
+ 511   3          thu1 = Uart_Read();
+ 512   3          Uart_Write(thu1);
+ 513   3          kitu(thu1);
+ 514   3          thu = thu1-48;
+ 515   3          chuoi(":");
+ 516   3          dd1 = Uart_Read();
+ 517   3          Uart_Write(dd1);
+ 518   3          kitu(dd1);
+ 519   3          dd2 = Uart_Read();
+ 520   3          Uart_Write(dd2);
+ 521   3          kitu(dd2);
+ 522   3          ngay = gop2byte(dd1, dd2);
+ 523   3          chuoi("/");
+ 524   3          mm1 = Uart_Read();
+ 525   3          Uart_Write(mm1);
+ 526   3          kitu(mm1);
+ 527   3          mm2 = Uart_Read();
+ 528   3          Uart_Write(mm2);
+ 529   3          kitu(mm2);
+ 530   3          thang = gop2byte(mm1, mm2);
+ 531   3          chuoi("/");
+ 532   3          yy1 = Uart_Read();
+ 533   3          Uart_Write(yy1);
+ 534   3          kitu(yy1);
+ 535   3          yy2 = Uart_Read();
+ 536   3          Uart_Write(yy2);
+ 537   3          kitu(yy2);
+ 538   3          nam = gop2byte(yy1, yy2);
+ 539   3          ghi(0x00, giay);
+ 540   3          ghi(0x01, phut);
+ 541   3          ghi(0x02, gio);
+ 542   3          ghi(0x03, thu);
+ 543   3          ghi(0x04, ngay);
+ 544   3          ghi(0x05, thang);
+ 545   3          ghi(0x06, nam);
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 10  
+
+ 546   3          mode=0;
+ 547   3          }
+ 548   2        if (mode==2) // che do hen gio
+ 549   2          {
+ 550   3          khoitao();
+ 551   3          chuoi("    HEN GIO");
+ 552   3          delay(1000);
+ 553   3          lenh(0x01);
+ 554   3          chuoi("     HH:MM");
+ 555   3          lenh(0xc0);
+ 556   3          chuoi("     ");
+ 557   3          Uart_Init();
+ 558   3          h11 = Uart_Read();
+ 559   3          Uart_Write(h11);
+ 560   3          kitu(h11);
+ 561   3          h12 = Uart_Read();
+ 562   3          Uart_Write(h12);
+ 563   3          kitu(h12);
+ 564   3          chuoi(":");
+ 565   3          m11 = Uart_Read();
+ 566   3          Uart_Write(m11);
+ 567   3          kitu(m11);
+ 568   3          m12 = Uart_Read();
+ 569   3          Uart_Write(m12);
+ 570   3          kitu(m12);
+ 571   3          lenh(0x01);
+ 572   3          chuoi("  NHAC CHUONG");
+ 573   3          lenh(0xc0);
+ 574   3          chuong1 = Uart_Read();
+ 575   3          Uart_Write(chuong1);
+ 576   3          while (1) {
+ 577   4      
+ 578   4          if ((chuong1!='a')&&(chuong1!='b')&&(chuong1!='c')) chuong1='a';
+ 579   4          if (chuong1 == 'a') {
+ 580   5          chuoi("    CHUONG 1");
+ 581   5          batchuong();
+ 582   5          Uart_Init();
+ 583   5          chuong2 = Uart_Read();
+ 584   5          Uart_Write(chuong2);
+ 585   5          if (chuong2 == 'a') { mode=0; break;  } else { chuong1=chuong2;}
+ 586   5          }
+ 587   4          lenh(0x01);
+ 588   4          chuoi("  NHAC CHUONG");
+ 589   4          lenh(0xc0);
+ 590   4          if (chuong1 == 'b') {
+ 591   5          chuoi("    CHUONG 2");
+ 592   5          batchuong();
+ 593   5          Uart_Init();
+ 594   5          chuong2 = Uart_Read();
+ 595   5          Uart_Write(chuong2);
+ 596   5          if (chuong2 == 'b') { mode=0;  break;  } else { chuong1=chuong2;}
+ 597   5          }
+ 598   4          lenh(0x01);
+ 599   4          chuoi("  NHAC CHUONG");
+ 600   4          lenh(0xc0);
+ 601   4          if (chuong1 == 'c') {
+ 602   5          chuoi("    CHUONG 3");
+ 603   5          batchuong();
+ 604   5          Uart_Init();
+ 605   5          chuong2 = Uart_Read();
+ 606   5          Uart_Write(chuong2);
+ 607   5          if (chuong2 == 'c') { mode=0; break;  } else { chuong1=chuong2;}
+C51 COMPILER V9.01   MAIN                                                                  11/15/2021 15:34:27 PAGE 11  
+
+ 608   5          }
+ 609   4          lenh(0x01);
+ 610   4          chuoi("  NHAC CHUONG");
+ 611   4          lenh(0xc0);
+ 612   4          }
+ 613   3          }
+ 614   2        }
+ 615   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2329    ----
+   CONSTANT SIZE    =    203    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     43      13
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
