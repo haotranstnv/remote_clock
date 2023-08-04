@@ -1,2 +1,2 @@
 # remote_clock
-# file .hex can import by proteus, it's assembly code
+# file .hex in Objects folder can import by proteus, it's assembly code
